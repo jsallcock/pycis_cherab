@@ -4,14 +4,14 @@ from raysect.primitive import Mesh
 from raysect.optical.spectralfunction import ConstantSF
 from raysect.optical.material import AbsorbingSurface, Lambert
 from raysect.optical.library.metal import RoughTungsten, RoughBeryllium
-
-try:
-    CADMESH_PATH = os.environ['CHERAB_CADMESH']
-except KeyError:
-    if os.path.isdir('/projects/cadmesh/'):
-        CADMESH_PATH = '/projects/cadmesh/'
-    else:
-        raise ValueError("CHERAB's CAD file path environment variable 'CHERAB_CADMESH' is not set.")
+#
+# try:
+#     CADMESH_PATH = os.environ['CHERAB_CADMESH']
+# except KeyError:
+#     if os.path.isdir('/projects/cadmesh/'):
+#         CADMESH_PATH = '/projects/cadmesh/'
+#     else:
+#         raise ValueError("CHERAB's CAD file path environment variable 'CHERAB_CADMESH' is not set.")
 
 metal_roughness = 0.25
 lambertian_absorption = 0.25

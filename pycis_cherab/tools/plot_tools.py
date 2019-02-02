@@ -17,10 +17,10 @@ from raysect.optical import World, translate, rotate, rotate_basis, Spectrum
 from cherab.core.atomic import Line
 from cherab.core.atomic.elements import deuterium, carbon
 from cherab.openadas import OpenADAS
-from cherab.solps import load_solps_from_mdsplus
+# from cherab.solps import load_solps_from_mdsplus
 from cherab.core.model import ExcitationLine, RecombinationLine, Bremsstrahlung
 from cherab.core.model.lineshape import StarkBroadenedLine
-from cherab.tools.observers import load_calcam_calibration
+# from cherab.tools.observers import load_calcam_calibration
 end_cherab_import = time.time()
 print('imports', end_cherab_import - start_cherab_import)
 
@@ -30,10 +30,10 @@ world = World()
 # Load all parts of mesh with chosen material
 MESH_PARTS = ['/projects/cadmesh/mast/mastu-light/mug_centrecolumn_endplates.stl',
               '/projects/cadmesh/mast/mastu-light/mug_divertor_nose_plates.stl']
-
-for path in MESH_PARTS:
-    import_stl(path, parent=world, material=AbsorbingSurface())  # Mesh with perfect absorber
-
+#
+# for path in MESH_PARTS:
+#     import_stl(path, parent=world, material=AbsorbingSurface())  # Mesh with perfect absorber
+#
 
 def plot_mastu_poloidal_geometry(ax, **kwargs):
     """ plot the poloidal projection of MAST-U tile surfaces on a given matplotlib axis object."""

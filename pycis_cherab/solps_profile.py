@@ -10,7 +10,7 @@ from raysect.core.ray import Ray as CoreRay
 from raysect.optical import World, translate, rotate, rotate_basis, Spectrum
 
 # cherab imports
-from cherab.solps import load_solps_from_mdsplus
+# from cherab.solps import load_solps_from_mdsplus
 from cherab.core.atomic import Line
 from cherab.core.atomic.elements import deuterium, carbon
 from cherab.openadas import OpenADAS

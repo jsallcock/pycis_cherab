@@ -1,4 +1,4 @@
 # pycis_cherab
 
-Tools for coupling the coherence imaging spectroscopy instrument model (pycis) to a general spectroscopy framework
-(cherab).
+Tools and examples coupling pycis (coherence imaging spectroscopy instrument model) to cherab (general spectroscopy 
+framework).

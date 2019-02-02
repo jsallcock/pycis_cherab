@@ -48,8 +48,8 @@ from raysect.optical.observer import RGBPipeline2D, SpectralPowerPipeline2D, Pow
 from cherab.core.atomic import Line
 from cherab.core.atomic.elements import deuterium, carbon
 from cherab.core.model import ExcitationLine, RecombinationLine
-from cherab.tools.observers import load_calcam_calibration
-from cherab.solps import load_solps_from_mdsplus
+# from cherab.tools.observers import load_calcam_calibration
+# from cherab.solps import load_solps_from_mdsplus
 from cherab.openadas import OpenADAS
 
 mds_server = 'solps-mdsplus.aug.ipp.mpg.de:8001'
@@ -59,8 +59,8 @@ world = World()
 MESH_PARTS = ['/projects/cadmesh/mast/mastu-light/mug_centrecolumn_endplates.stl',
               '/projects/cadmesh/mast/mastu-light/mug_divertor_nose_plates.stl']
 
-for path in MESH_PARTS:
-    import_stl(path, parent=world, material=AbsorbingSurface())  # Mesh with perfect absorber
+# for path in MESH_PARTS:
+#     import_stl(path, parent=world, material=AbsorbingSurface())  # Mesh with perfect absorber
 
 
 # save_img_path = '/Users/GraceYoung/Documents/joe/code/pycis_cherab/saved_cherab_outputs/'
