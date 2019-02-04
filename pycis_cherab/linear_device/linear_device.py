@@ -1,5 +1,6 @@
 import pycis
 import pycis_cherab
+import pystark
 
 # external imports
 import matplotlib.pyplot as plt
@@ -55,10 +56,14 @@ class LinearDevice:
 
     """
 
-    def __init__(self, inst, plasma_params, line, sim_name=None):
+    def __init__(self, inst, inst_params, plasma_params, line, sim_name=None):
         """
         :param inst: CIS instrument
         :type inst: pycis.Instrument
+
+        :param inst_params: dict of instrument position parameters. keys:
+        -'fov': instrument field of view [ degrees ]
+        -'pos':
 
         :param plasma_params: dict of plasma parameters. keys:
         -'dens_peak': peak density [ / m^-3 ] (assumes ion density = electron density)
@@ -68,20 +73,22 @@ class LinearDevice:
         -'bfield': uniform magnetic field strength along linear device axis [ T ]
         -'plasma_len': length of [ m ]
 
-        :param line: string corresponding to observed Balmer line
+        :param line: int corresponding to upper principal quantum number of the selected Balmer line transition
 
         :param sim_name: simulation name for saving
         :type sim_name: str
 
         """
-
-        # TODO explicitly define coordinate system
         # TODO instrument placement
         # TODO sightline figure plotting
-        # TODO recreate Magnum PSI approximate plasma profiles
+        # TODO recreate Magnum PSI approximate profiles
 
         self.inst = inst
 
+        # instrument position and orientation
+        self.fov = inst_params['fov']
+
+        # plasma parameters
         self.dens_peak = plasma_params['dens_peak']
         self.dens_sigma = plasma_params['dens_sigma']
         self.temp_peak = plasma_params['temp_peak']
@@ -92,7 +99,10 @@ class LinearDevice:
         self.line = line
         self.sim_name = sim_name
 
-        self.make_plasma()
+        # setup scenegraph
+        self.world = World()
+
+        self.plasma = self.make_plasma()
         self.observe_plasma()
         self.save()
 
@@ -103,15 +113,12 @@ class LinearDevice:
         :return:
         """
 
-        # setup scenegraph
-        world = World()
-
         # create atomic data source
         adas = OpenADAS(permit_extrapolation=True)
 
-        plasma = Plasma(parent=world)
+        plasma = Plasma(parent=self.world)
         plasma.atomic_data = adas
-        plasma.geometry = Cylinder(self.dens_sigma * 8, self.plasma_len)
+        plasma.geometry = Cylinder(self.dens_sigma * 10, self.plasma_len)
         plasma.geometry_transform = None
         plasma.integrator = NumericalIntegrator(step=self.dens_sigma / 20)
 
@@ -133,30 +140,14 @@ class LinearDevice:
         plasma.electron_distribution = e_distribution
         plasma.composition = [d0_species, d1_species]
 
-        # Setup elements.deuterium lines
-        d_alpha = Line(elements.deuterium, 0, (3, 2))
-        d_beta = Line(elements.deuterium, 0, (4, 2))
-        d_gamma = Line(elements.deuterium, 0, (5, 2))
-        d_delta = Line(elements.deuterium, 0, (6, 2))
-        d_epsilon = Line(elements.deuterium, 0, (7, 2))
+        # Setup elements.deuterium line
+        ba_line = Line(elements.deuterium, 0, (self.line, 2))
 
         plasma.models = [
-            # Bremsstrahlung(),
-            # ExcitationLine(d_alpha),
-            # ExcitationLine(d_beta),
-            ExcitationLine(d_gamma),
-            # ExcitationLine(d_delta),
-            # ExcitationLine(d_epsilon),
-            # RecombinationLine(d_alpha),
-            # RecombinationLine(d_beta),
-            RecombinationLine(d_gamma),
-            # RecombinationLine(d_delta),
-            # RecombinationLine(d_epsilon)
+            #Bremsstrahlung(),
+            ExcitationLine(ba_line),
+            RecombinationLine(ba_line),
         ]
-
-        # alternate geometry
-        # plasma.geometry = Cylinder(sigma * 2.0, sigma * 10.0)
-        # plasma.geometry_transform = translate(0, -sigma * 5.0, 0) * rotate(0, 90, 0)
 
         return
 
@@ -175,8 +166,9 @@ class LinearDevice:
         power_unfiltered = PowerPipeline2D(display_unsaturated_fraction=0.8, name="Unfiltered Power (W)")
         power_unfiltered.display_update_time = 15
 
-        camera = PinholeCamera(sensor_dim, pipelines=[spectral, rgb, power_unfiltered], fov=35, parent=world,
-                               transform=translate(0, 0, -3.5))
+        camera = PinholeCamera(self.inst.camera.sensor_dim, pipelines=[spectral, rgb, power_unfiltered], fov=self.fov,
+                               parent=self.world,
+                               transform=translate(0, -1, 0))
         # camera.render_engine = SerialEngine()
         camera.spectral_rays = 1
         camera.spectral_bins = 65

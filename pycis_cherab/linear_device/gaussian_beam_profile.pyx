@@ -6,7 +6,7 @@ from cherab.core.math.function cimport Function3D
 cdef class GaussianBeamProfile(Function3D):
     """
     modelled after cherab's GaussianVolume Function3D, a function for Gaussian beam profiles (eg. a linear
-    plasma device)
+    plasma device). Beam defined along z-axis.
     """
 
     cdef double peak
@@ -36,7 +36,7 @@ cdef class GaussianBeamProfile(Function3D):
             if x == self._cache_x and y == self._cache_y and z == self._cache_z:
                 return self._cache_v
 
-        v = self.peak * exp(-(y*y + z*z) / self._constant)
+        v = self.peak * exp(-(x*x + y*y) / self._constant)
         self._cache = True
         self._cache_x = x
         self._cache_y = y
