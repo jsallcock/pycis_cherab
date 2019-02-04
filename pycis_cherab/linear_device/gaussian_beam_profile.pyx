@@ -5,7 +5,7 @@ from cherab.core.math.function cimport Function3D
 
 cdef class GaussianBeamProfile(Function3D):
     """
-    modelled after cherab's GaussianVolume example Function3D, a function for Gaussian beam profiles (like a linear
+    modelled after cherab's GaussianVolume Function3D, a function for Gaussian beam profiles (eg. a linear
     plasma device)
     """
 

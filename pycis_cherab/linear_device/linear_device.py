@@ -50,33 +50,47 @@ def load_linear_device(fname):
 class LinearDevice:
     """
     Synthetic CIS measurements on a linear plasma device. Plasma beam assumed to have Gaussian temperature and
-    density profiles. Basically a wrapper for cherab, for testing instrument configurations and inversions.
+    density profiles. Basically a wrapper for cherab, for testing instrument configurations, spectral lineshape models
+    and inversions in a simple geometry.
 
     """
 
-    def __init__(self, inst, dens, dens_sigma, temp, temp_sigma, bfield, name=None):
+    def __init__(self, inst, plasma_params, line, sim_name=None):
         """
-
         :param inst: CIS instrument
         :type inst: pycis.Instrument
 
-        :param dens: [ / m^-3 ]
-        :param temp: peak temperature [ eV ]
-        :param bfield:
+        :param plasma_params: dict of plasma parameters. keys:
+        -'dens_peak': peak density [ / m^-3 ] (assumes ion density = electron density)
+        -'dens_sigma': density profile width [ m ]
+        -'temp_peak': peak temperature [ eV ] (assumes ion temperature = electron temperature)
+        -'temp_sigma': temperature profile width [ m ]
+        -'bfield': uniform magnetic field strength along linear device axis [ T ]
+        -'plasma_len': length of [ m ]
+
+        :param line: string corresponding to observed Balmer line
+
+        :param sim_name: simulation name for saving
+        :type sim_name: str
 
         """
 
-        self.inst = inst
-        self.dens = dens
-        self.dens_sigma = dens_sigma
-        self.temp = temp
-        self.temp_sigma = temp_sigma
-        self.bfield = bfield
+        # TODO explicitly define coordinate system
+        # TODO instrument placement
+        # TODO sightline figure plotting
+        # TODO recreate Magnum PSI approximate plasma profiles
 
-        if name is None:
-            name = 'linear_device_test'
-        self.name = name
-        self.fpath = os.path.join(dpath, name + '.p')
+        self.inst = inst
+
+        self.dens_peak = plasma_params['dens_peak']
+        self.dens_sigma = plasma_params['dens_sigma']
+        self.temp_peak = plasma_params['temp_peak']
+        self.temp_sigma = plasma_params['temp_sigma']
+        self.bfield = plasma_params['bfield']
+        self.plasma_len = plasma_params['plasma_len']
+
+        self.line = line
+        self.sim_name = sim_name
 
         self.make_plasma()
         self.observe_plasma()
@@ -89,28 +103,24 @@ class LinearDevice:
         :return:
         """
 
-        ion_density = 8e19
-        sigma = 0.25
-
         # setup scenegraph
         world = World()
 
         # create atomic data source
         adas = OpenADAS(permit_extrapolation=True)
 
-        # PLASMA
         plasma = Plasma(parent=world)
         plasma.atomic_data = adas
-        plasma.geometry = Sphere(sigma * 10.0)
+        plasma.geometry = Cylinder(self.dens_sigma * 8, self.plasma_len)
         plasma.geometry_transform = None
-        plasma.integrator = NumericalIntegrator(step=sigma / 5.0)
+        plasma.integrator = NumericalIntegrator(step=self.dens_sigma / 20)
 
         # define basic distributions
-        d_density = pycis_cherab.GaussianBeamProfile(0.5 * ion_density, sigma * 10000)
-        e_density = pycis_cherab.GaussianBeamProfile(ion_density, sigma * 10000)
-        temperature = 1 + pycis_cherab.GaussianBeamProfile(79, sigma)
-        bulk_velocity = ConstantVector3D(Vector3D(0, 0, 0))
+        d_density = pycis_cherab.GaussianBeamProfile(self.dens_peak, self.dens_sigma)
+        e_density = pycis_cherab.GaussianBeamProfile(self.dens_peak, self.dens_sigma)
+        temperature = pycis_cherab.GaussianBeamProfile(self.temp_peak, self.temp_sigma)
 
+        bulk_velocity = ConstantVector3D(Vector3D(0, 0, 0))  # hard-coded to zero bulk flow for now
         d_distribution = Maxwellian(d_density, temperature, bulk_velocity,
                                     elements.deuterium.atomic_weight * atomic_mass)
         e_distribution = Maxwellian(e_density, temperature, bulk_velocity, electron_mass)
@@ -186,6 +196,15 @@ class LinearDevice:
 
         return
 
+    def plot_view(self):
+        """
+
+        :return:
+        """
+
+
+        return
+
 
     def save(self):
         """
@@ -194,9 +213,9 @@ class LinearDevice:
 
         """
 
-        with open(self.fpath, 'wb') as f:
-            pickle.dump(data, f)
+        if self.sim_name is None:
+            self.sim_name = 'linear_device_test'
+        fpath = os.path.join(dpath, self.sim_name + '.p')
 
-    cis_img = pycis.SynthImage(cis_inst, wl, spec * 1e11)
-    cis_img.img_igram()
-    plt.show()
+        with open(fpath, 'wb') as f:
+            pickle.dump(data, f)
