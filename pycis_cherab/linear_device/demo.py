@@ -15,7 +15,7 @@ simulation_name = 'demo_1'
 
 # camera
 bit_depth = 16
-sensor_dim = (200, 200)
+sensor_dim = (100, 100)
 pix_size = 6.5e-6
 qe = 0.6
 epercount = 0.46  # [ e / count ]
@@ -39,7 +39,10 @@ inst = pycis.Instrument(cam, back_lens, interferometer)
 
 # field of view angle
 fov = 50
+# radial coordinate of the instrument pupil [ m ]
+inst_r = 1
 inst_params = {'fov': fov,
+               'inst_r': inst_r,
                }
 
 # define the plasma parameters and profiles
@@ -49,7 +52,7 @@ plasma_params = {'dens_peak': 5e19,
                  'temp_peak': 10,
                  'temp_sigma': 0.05,
                  'bfield': 1.,
-                 'plasma_len': 3,
+                 'plasma_len': 5,
                  }
 
 ld = pycis_cherab.LinearDevice(inst, inst_params, plasma_params, 5)

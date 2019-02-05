@@ -20,7 +20,7 @@ from cherab.core import Species, Maxwellian, Plasma, Line, elements
 from cherab.openadas import OpenADAS
 
 # Core and external imports
-from raysect.optical import World, translate, rotate, Vector3D, Point3D, Ray
+from raysect.optical import World, translate, rotate, Vector3D, Point3D, Ray, rotate_x, rotate_y, rotate_z
 from raysect.optical.observer.pipeline.spectral import SpectralPowerPipeline2D, SpectralRadiancePipeline2D
 from raysect.optical.observer.pipeline import RGBPipeline2D, PowerPipeline2D
 from raysect.primitive import Sphere, Cylinder
@@ -63,7 +63,7 @@ class LinearDevice:
 
         :param inst_params: dict of instrument position parameters. keys:
         -'fov': instrument field of view [ degrees ]
-        -'pos':
+        -'inst_r': radial coordinate of the instrument pupil [ m ]
 
         :param plasma_params: dict of plasma parameters. keys:
         -'dens_peak': peak density [ / m^-3 ] (assumes ion density = electron density)
@@ -79,14 +79,17 @@ class LinearDevice:
         :type sim_name: str
 
         """
-        # TODO instrument placement
-        # TODO sightline figure plotting
+
         # TODO recreate Magnum PSI approximate profiles
+        # TODO sightline figure plotting
+        # TODO setup geometry matrix
+
 
         self.inst = inst
 
         # instrument position and orientation
         self.fov = inst_params['fov']
+        self.inst_r = inst_params['inst_r']
 
         # plasma parameters
         self.dens_peak = plasma_params['dens_peak']
@@ -101,9 +104,10 @@ class LinearDevice:
 
         # setup scenegraph
         self.world = World()
-
         self.plasma = self.make_plasma()
         self.observe_plasma()
+
+
         self.save()
 
 
@@ -118,7 +122,7 @@ class LinearDevice:
 
         plasma = Plasma(parent=self.world)
         plasma.atomic_data = adas
-        plasma.geometry = Cylinder(self.dens_sigma * 10, self.plasma_len)
+        plasma.geometry = Cylinder(self.dens_sigma * 50, self.plasma_len)
         plasma.geometry_transform = None
         plasma.integrator = NumericalIntegrator(step=self.dens_sigma / 20)
 
@@ -144,7 +148,7 @@ class LinearDevice:
         ba_line = Line(elements.deuterium, 0, (self.line, 2))
 
         plasma.models = [
-            #Bremsstrahlung(),
+            Bremsstrahlung(),
             ExcitationLine(ba_line),
             RecombinationLine(ba_line),
         ]
@@ -161,14 +165,14 @@ class LinearDevice:
 
         # define pipelines
         spectral = SpectralRadiancePipeline2D()
-        rgb = RGBPipeline2D(display_unsaturated_fraction=0.8, name="sRGB")
+        rgb = RGBPipeline2D(display_unsaturated_fraction=0.99, name="sRGB")
         # Get the power and raw spectral data for scientific use.
-        power_unfiltered = PowerPipeline2D(display_unsaturated_fraction=0.8, name="Unfiltered Power (W)")
+        power_unfiltered = PowerPipeline2D(display_unsaturated_fraction=0.99, name="Unfiltered Power (W)")
         power_unfiltered.display_update_time = 15
 
         camera = PinholeCamera(self.inst.camera.sensor_dim, pipelines=[spectral, rgb, power_unfiltered], fov=self.fov,
                                parent=self.world,
-                               transform=translate(0, -1, 0))
+                               transform=translate(self.inst_r, 0, self.plasma_len / 2) * rotate_y(-90))
         # camera.render_engine = SerialEngine()
         camera.spectral_rays = 1
         camera.spectral_bins = 65
